@@ -1,0 +1,25 @@
+{
+  "name": "fooddelivery-backend",
+  "version": "1.0.0",
+  "description": "送餐系统后台",
+  "main": "app.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Augustwuli/foodDelivery-backend.git"
+  },
+  "keywords": [
+    "hapi"
+  ],
+  "author": "Augustwuli",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Augustwuli/foodDelivery-backend/issues"
+  },
+  "homepage": "https://github.com/Augustwuli/foodDelivery-backend#readme",
+  "dependencies": {
+    "hapi": "^17.8.1"
+  }
+}
