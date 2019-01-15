@@ -20,6 +20,11 @@
   },
   "homepage": "https://github.com/Augustwuli/foodDelivery-backend#readme",
   "dependencies": {
-    "hapi": "^17.8.1"
+    "env2": "^2.2.2",
+    "hapi": "^16.7.0",
+    "hapi-swagger": "^7.10.0",
+    "inert": "^4.2.1",
+    "package": "^1.0.1",
+    "vision": "^4.1.1"
   }
 }
