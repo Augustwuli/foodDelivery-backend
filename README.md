@@ -34,3 +34,11 @@
 - 创建迁移
 - 在迁移文件内创建表单和删除表单
 - 执行迁移
+
+### 2.定义 model
+
+博客链接：https://blog.csdn.net/August_leo/article/details/86530957
+
+内容包含：
+- 开启下划线命名规范
+- 定义数据库相关的 model
