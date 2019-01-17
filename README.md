@@ -16,6 +16,7 @@
 ### 1.配置接口文档和入参校验
 
 博客链接：https://blog.csdn.net/August_leo/article/details/86522874
+
 内容包含：
 - 配置接口文档
 - 入参校验
@@ -23,7 +24,8 @@
 ## 2019-01-17
 ### 1.通过 sequelize 插件使用 mysql
 
-博客链接：
+博客链接：https://blog.csdn.net/August_leo/article/details/86522874
+
 内容包含：
 - 安装依赖
 - 初始化 sequelize
