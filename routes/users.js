@@ -10,6 +10,7 @@ module.exports = [
       let result = {
         success: false,
         message: '登录失败',
+        data: {},
         statu: 0
       }
       if (type === '1') {
@@ -21,8 +22,10 @@ module.exports = [
           result.success = true;
           if(user){
             let pwd = user.get('password');
+            let id = user.get('id');
             if(pwd === password){
               result.message = '登录成功';
+              result.data.userId = id;
               result.statu = 1;
             }
           }else{
@@ -41,8 +44,10 @@ module.exports = [
           result.success = true;
           if(user){
             let pwd = user.get('password');
+            let id = user.get('id');
             if(pwd === password){
               result.message = '登录成功';
+              result.data.userId = id;
               result.statu = 1;
             }
           }else{

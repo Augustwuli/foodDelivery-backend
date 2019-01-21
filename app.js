@@ -3,6 +3,7 @@ require('env2')('./.env');
 const config = require('./config');
 const hello = require('./routes/hello');
 const users = require('./routes/users');
+const stores = require('./routes/stores');
 const pluginHapiSwagger = require('./plugins/hapi-swagger');
 
 // 配置服务器启动的 host 和端口
@@ -19,6 +20,7 @@ const init = async () => {
   server.route([
     ...hello,
     ...users,
+    ...stores,
   ]);
   await server.start();
   console.log(`Server running at: ${server.info.uri}`);
