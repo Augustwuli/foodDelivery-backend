@@ -7,7 +7,7 @@ module.exports = [
     method: 'POST',
     path: `/${GROUP_NAME}/save`,
     handler: async (request, reply) => {
-      const { storeId, name, phone, address, longitude, latitude} = request.payload;;
+      const { storeId, name, phone, address, longitude, latitude} = request.payload;
       let result = {
         success: false,
         message: '保存商家信息失败',
