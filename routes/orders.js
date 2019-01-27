@@ -2,6 +2,7 @@ const models = require('../node_modules/.bin/models');
 const Joi = require('joi');
 const GROUP_NAME = 'orders';
 const { paginationDefine } = require('../utils/router-helper');
+models.orders.belongsTo(models.stores, {foreignKey:'store_id',as:'stores'});
 
 module.exports = [
   {
@@ -201,25 +202,23 @@ module.exports = [
       let { orderId } = request.params;
       orderId = Number(orderId);
       console.log(orderId)
-      let include = [{
-        association: models.stores.hasMany(models.orders, 
-          {
-            foreignKey:'store_id',
-            as:'order',
-            scope: {
-              id: orderId
-            } 
-          }),
-      }]
-      await models.stores.findOne({include:include})
-      .then((order) => {
+      await models.orders.findOne(
+        { 
+          include:[{
+            model: models.stores,
+            as: 'stores',
+            attributes: ['phone','address','store_name'] 
+          }],
+          where: {id: orderId}
+        }).then((order) => {
         result.success = true;
         if(order){
           result.data.name = order.name;
-          result.data.phone = order.order.order_phone;
+          result.data.phone = order.order_phone;
           result.data.address = order.address;
-          result.data.storeAddress = order.order.address;
-          result.data.storeName = order.store_name;
+          result.data.storePhone = order.stores.phone;
+          result.data.storeAddress = order.stores.address;
+          result.data.storeName = order.stores.store_name;
           result.message = '获取订单信息成功';
           result.statu = 1;
         }
