@@ -3,6 +3,7 @@ const Joi = require('joi');
 const GROUP_NAME = 'orders';
 const { paginationDefine } = require('../utils/router-helper');
 models.orders.belongsTo(models.stores, {foreignKey:'store_id',as:'stores'});
+models.orders.belongsTo(models.takers, {foreignKey:'taker_id',as:'takers'});
 
 module.exports = [
   {
@@ -64,6 +65,11 @@ module.exports = [
       let {storeId} = request.params;
       storeId = Number(storeId);
       await models.orders.findAndCountAll({
+        include:[{
+          model: models.takers,
+          as: 'takers',
+          attributes: ['phone','taker_name'] 
+        }],
         attributes: ['id', 'taker_id', 'address', 'order_phone', 'statu'],
         where:{
           store_id: storeId
@@ -97,6 +103,53 @@ module.exports = [
       description: '获取派送单接口'
     }
   },
+  // {
+  //   method: 'GET',
+  //   path: `/${GROUP_NAME}/table/{takerId}`,
+  //   handler: async (request, reply) => {
+  //     let result = {
+  //       success: false,
+  //       message: '获取订单列表失败',
+  //       data: {},
+  //       statu: 0
+  //     };
+  //     let {takerId} = request.params;
+  //     console.log(takerId)
+      // await models.orders.findAndCountAll({
+      //   attributes: ['id', 'address', 'order_phone','statu'],
+      //   where:{
+      //     taker_id: takerId,
+      //     statu: statu
+      //   },
+      //   limit: request.query.limit,
+      //   offset: (request.query.page - 1) * request.query.limit,
+      // }).then((orders) => {
+      //   result.success = true;
+      //   if(orders){
+      //     result.data.orders = orders.rows;
+      //     result.data.count = orders.count;
+      //     result.message = '获取订单列表成功';
+      //     result.statu = 1;
+      //   }
+      // }).catch((err) => {
+      //   console.log(err)
+      //   console.log('获取订单列表失败');
+      // })
+      // reply(result);
+  //   },
+  //   config: {
+  //     validate :{
+  //       params: {
+  //         takerId: Joi.number().required,
+  //       },
+  //       query: {
+  //         ...paginationDefine
+  //       }
+  //     },
+  //     tags: ['api', GROUP_NAME],
+  //     description: '获取订单接口'
+  //   }
+  // },
   {
     method: 'POST',
     path: `/${GROUP_NAME}/update`,
@@ -207,7 +260,7 @@ module.exports = [
           include:[{
             model: models.stores,
             as: 'stores',
-            attributes: ['phone','address','store_name'] 
+            attributes: ['phone','address','store_name','longitude','latitude'] 
           }],
           where: {id: orderId}
         }).then((order) => {
@@ -219,6 +272,10 @@ module.exports = [
           result.data.storePhone = order.stores.phone;
           result.data.storeAddress = order.stores.address;
           result.data.storeName = order.stores.store_name;
+          result.data.olongitude = order.longitude;
+          result.data.olatitude = order.latitude;
+          result.data.slongitude = order.stores.longitude;
+          result.data.slatitude = order.stores.latitude;
           result.message = '获取订单信息成功';
           result.statu = 1;
         }
@@ -226,7 +283,7 @@ module.exports = [
         console.log(err)
         console.log('获取订单信息失败')
       })
-      reply(result)
+      reply(result);
     },
     config: {
       validate: {
@@ -236,6 +293,92 @@ module.exports = [
       },
       tags: ['api', GROUP_NAME],
       description: '获取订单详情'
+    }
+  },
+  {
+    method: 'POST',
+    path: `/${GROUP_NAME}/accept`,
+    handler: async (request, reply) => {
+      let result = {
+        success: false,
+        message: '接受订单失败',
+        data: {},
+        statu: 0
+      }
+      let { orderId ,takerId } = request.payload;
+      await models.orders.update(
+        {
+          statu: 1,
+          taker_id: takerId
+        },
+        {
+          where: {
+            id: orderId
+          }
+        }).then((row) => {
+          result.success = true;
+          if(row){
+            result.message = '接受订单成功';
+            result.statu = 1;
+          }
+        }).catch((err) => {
+          console.log('接受订单失败')
+          console.log(err)
+        }
+      )
+      reply(result);
+    },
+    config: {
+      validate: {
+        payload: {
+          orderId: Joi.number().required(),
+          takerId: Joi.number().required()
+        }
+      },
+      tags: ['api', GROUP_NAME],
+      description: '接受订单'
+    }
+  },
+  {
+    method: 'POST',
+    path: `/${GROUP_NAME}/sure`,
+    handler: async (request, reply) => {
+      let result = {
+        success: false,
+        message: '确认收货失败',
+        data: {},
+        statu: 0
+      }
+      let { orderId } = request.payload;
+      await models.orders.update(
+        {
+          statu: 2,
+        },
+        {
+          where: {
+            id: orderId
+          }
+        }).then((row) => {
+          result.success = true;
+          if(row){
+            result.message = '确认收货成功';
+            result.statu = 1;
+          }
+        }).catch((err) => {
+          console.log('确认收货失败')
+          console.log(err)
+        }
+      )
+      reply(result);
+    },
+    config: {
+      validate: {
+        payload: {
+          orderId: Joi.number().required()
+        }
+      },
+      tags: ['api', GROUP_NAME],
+      description: '确认收货'
     }
   },
   {
@@ -249,7 +392,12 @@ module.exports = [
         statu: 0
       }
       await models.orders.findAndCountAll({
-        attributes: ['id', 'address', 'order_phone'],
+        include:[{
+          model: models.stores,
+          as: 'stores',
+          attributes: ['address'] 
+        }],
+        attributes: ['id', 'address', 'order_phone','created_at'],
         where:{
           statu: 0
         },
@@ -291,7 +439,7 @@ module.exports = [
       }
       const {takerId} = request.params;
       await models.orders.findAndCountAll({
-        attributes: ['id', 'address', 'order_phone'],
+        attributes: ['id', 'address', 'order_phone','statu'],
         where:{
           taker_id: takerId
         },
@@ -323,5 +471,150 @@ module.exports = [
       tags: ['api', GROUP_NAME],
       description: '获取派送员所有订单'
     }
-  }
+  },
+  {
+    method: 'GET',
+    path: `/${GROUP_NAME}/taker/{takerId}/{statu}`,
+    handler: async (request, reply) => {
+      let result = {
+        success: false,
+        message: '获取派送员所有订单失败',
+        data: {},
+        statu: 0
+      }
+      const {takerId,statu} = request.params;
+      await models.orders.findAndCountAll({
+        attributes: ['id', 'address', 'order_phone','statu'],
+        where:{
+          taker_id: takerId,
+          statu: statu
+        },
+        limit: request.query.limit,
+        offset: (request.query.page - 1) * request.query.limit,
+      }).then((orders) => {
+        result.success = true;
+        if(orders){
+          result.data.orders = orders.rows;
+          result.data.count = orders.count;
+          result.message = '获取派送员所有订单成功';
+          result.statu = 1;
+        }
+      }).catch((err) => {
+        console.log(err)
+        console.log('获取派送员所有订单失败');
+      })
+      reply(result);
+    },
+    config: {
+      validate: {
+        params: {
+          takerId: Joi.string().required(),
+          statu: Joi.number().required()
+        },
+        query: {
+          ...paginationDefine
+        }
+      },
+      tags: ['api', GROUP_NAME],
+      description: '获取派送员所有订单'
+    }
+  },
+  {
+    method: 'GET',
+    path:`/${GROUP_NAME}/orderinfo/{orderId}`,
+    handler: async (request,reply) => {
+      let result = {
+        success: false,
+        message: '获取订单详情失败',
+        data: {},
+        statu: 0
+      };
+      let { orderId } = request.params;
+      await models.orders.findOne(
+        { 
+          include:[{
+            model: models.takers,
+            as: 'takers',
+            attributes: ['phone','taker_name'] 
+          }],
+          where: {id: orderId}
+        }).then((order) => {
+        result.success = true;
+        if(order){
+          result.data.name = order.name;
+          result.data.phone = order.order_phone;
+          result.data.address = order.address;
+          result.data.takerPhone = order.takers.phone;
+          result.data.takerName = order.takers.taker_name;
+          result.message = '获取订单信息成功';
+          result.statu = 1;
+        }
+      }).catch((err) => {
+        console.log(err)
+        console.log('获取订单信息失败')
+      })
+      reply(result)
+    },
+    config: {
+      validate:{
+        params:{
+          orderId: Joi.number().required()
+        }
+      },
+      tags: ['api', GROUP_NAME],
+      description: '获取订单详情'
+    },
+  },
+  {
+    method: 'GET',
+    path: `/${GROUP_NAME}/list/{storeId}/{statu}`,
+    handler: async (request, reply) => {
+      let result = {
+        success: false,
+        message: '获取商家所有订单失败',
+        data: {},
+        statu: 0
+      }
+      const { storeId,statu } = request.params;
+      await models.orders.findAndCountAll({
+        include:[{
+          model: models.takers,
+          as: 'takers',
+          attributes: ['phone','taker_name'] 
+        }],
+        attributes: ['id', 'taker_id', 'address', 'order_phone'],
+        where:{
+          store_id: storeId,
+          statu: statu
+        },
+        limit: request.query.limit,
+        offset: (request.query.page - 1) * request.query.limit,
+      }).then((orders) => {
+        result.success = true;
+        if(orders){
+          result.data.orders = orders.rows;
+          result.data.count = orders.count;
+          result.message = '获取商家所有订单成功';
+          result.statu = 1;
+        }
+      }).catch((err) => {
+        console.log(err)
+        console.log('获取商家所有订单失败');
+      })
+      reply(result);
+    },
+    config: {
+      validate: {
+        params: {
+          storeId: Joi.string().required(),
+          statu: Joi.number().required()
+        },
+        query: {
+          ...paginationDefine
+        }
+      },
+      tags: ['api', GROUP_NAME],
+      description: '获取派送员所有订单'
+    }
+  },
 ];
